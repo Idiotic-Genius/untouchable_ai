@@ -6,6 +6,20 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 
-# Screen dimensions
+# Dimensions
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
+ENEMY_WIDTH = 20
+ENEMY_HEIGHT = 20
+
+# Speeds
+ENEMY_SPEED_MIN = 1
+ENEMY_SPEED_MAX = 4
+
+# Spawn Positions
+SPAWN_CENTER = 'center'
+SPAWN_TOP = 'top'
+SPAWN_BOTTOM = 'bottom'
+SPAWN_LEFT = 'left'
+SPAWN_RIGHT = 'right'
+ENEMY_SPAWN_POS = [SPAWN_TOP, SPAWN_BOTTOM, SPAWN_LEFT, SPAWN_RIGHT]

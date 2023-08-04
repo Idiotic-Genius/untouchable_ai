@@ -40,7 +40,7 @@ class Game:
                 self.player, 
                 self.enemies, 
                 False
-                )
+            )
             if hits:
                 running = False
 
