@@ -7,22 +7,21 @@ import constants as const
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.image = pygame.Surface((50, 50))
-        self.image.fill(const.RED)
+        self.image = pygame.Surface(const.PLAYER_SIZE)
+        self.image.fill(const.WHITE)
         self.rect = self.image.get_rect()
-        self.rect.centerx = const.SCREEN_WIDTH // 2
-        self.rect.bottom = const.SCREEN_HEIGHT - 10
-        self.speed = 5
+        self.rect.center = const.PLAYER_SPAWN_POS
+        self.speed = const.PLAYER_SPEED
+        self.life = const.PLAYER_STARTING_LIFE
 
     def update(self):
         # Move the player left or right
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT]:
+        if keys[pygame.K_LEFT] and self.rect.left > 0:
             self.rect.x -= self.speed
-        if keys[pygame.K_RIGHT]:
+        if keys[pygame.K_RIGHT] and self.rect.right < const.SCREEN_WIDTH:
             self.rect.x += self.speed
-        # Ensure the player stays within the screen boundaries
-        if self.rect.left < 0:
-            self.rect.left = 0
-        if self.rect.right > const.SCREEN_WIDTH:
-            self.rect.right = const.SCREEN_WIDTH
+        if keys[pygame.K_UP] and self.rect.top > 0:
+            self.rect.y -= self.speed
+        if keys[pygame.K_DOWN] and self.rect.bottom < const.SCREEN_HEIGHT:
+            self.rect.y += self.speed
