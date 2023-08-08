@@ -12,7 +12,7 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = const.SCREEN_CENTER_POS
         self.speed = const.PLAYER_SPEED
-        self.life = const.PLAYER_STARTING_LIFE
+        self.time = const.PLAYER_STARTING_TIME
         self.score = 0
 
     def update(self):
@@ -27,11 +27,11 @@ class Player(pygame.sprite.Sprite):
         if keys[pygame.K_DOWN] and self.rect.bottom < const.SCREEN_HEIGHT:
             self.rect.y += self.speed
 
-    def increase_life(self, value: int) -> None:
-        self.life += value
+    def increase_time(self, value: int) -> None:
+        self.time += value
 
-    def decrease_life(self, value: int) -> None:
-        self.life -= value
+    def decrease_time(self, value: int) -> None:
+        self.time -= value
 
     def increase_score(self, value: int) -> None:
         self.score += value
