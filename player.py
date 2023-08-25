@@ -1,7 +1,14 @@
 import pygame
+from enum import Enum
 
 import constants as const
 
+
+class Directions(Enum):
+    RIGHT = 1
+    LEFT = 2
+    UP = 3
+    DOWN = 4
 
 # Create the Player class
 class Player(pygame.sprite.Sprite):
