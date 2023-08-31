@@ -4,11 +4,12 @@ import constants as const
 from button import Button
 from enemy import Enemy
 from player import Player
-from time_pack import TimePack
+from timepack import TimePack
+from agent import QLearningAgent
 
 
 class Game:
-    def __init__(self):
+    def __init__(self, train_ai: bool):
         pygame.init()
         pygame.font.init()
         self.screen = pygame.display.set_mode(
@@ -19,6 +20,17 @@ class Game:
         # Fonts for displaying text
         self.time_font = pygame.font.Font(None, const.FONT_SIZE)
         self.score_font = pygame.font.Font(None, const.FONT_SIZE)
+
+        # Initialize the Q-learning agent
+        agent = None
+        if train_ai == True:
+            agent = QLearningAgent(
+                num_states=const.NUM_STATES,
+                num_actions=const.NUM_ACTIONS,
+                learning_rate=const.LEARNING_RATE,
+                discount_factor=const.DISCOUNT_FACTOR,
+                exploration_rate=const.EXPLORATION_RATE
+            )
 
         # Initialize sprites
         self.all_sprites = pygame.sprite.Group()
@@ -64,6 +76,13 @@ class Game:
 
             # Update the game
             self.all_sprites.update()
+
+            # Get the current state of the game
+            current_state = 0
+            for sprite in self.all_sprites:
+                sprite_x, sprite_y = sprite.get_pos()
+                sprite_state = sprite_y * const.SCREEN_WIDTH + sprite_x
+                current_state += sprite_state
 
             # Check for collisions between the player and enemies
             enemy_collisions = pygame.sprite.spritecollide(

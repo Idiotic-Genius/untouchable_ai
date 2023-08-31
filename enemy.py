@@ -72,3 +72,5 @@ class Enemy(pygame.sprite.Sprite):
                 const.SCREEN_WIDTH + self.rect.width*5
             )
 
+    def get_pos(self) -> tuple[int, int]:
+        return self.rect.x, self.rect.y

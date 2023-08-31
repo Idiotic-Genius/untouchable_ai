@@ -1,3 +1,5 @@
+from enum import Enum
+
 # Game
 GAME_NAME = "Untouchable"
 GAME_SPEED = 15
@@ -47,3 +49,17 @@ GRAY = (150, 150, 150)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
+
+# Q-Learning Parameters
+LEARNING_RATE = 0.1
+DISCOUNT_FACTOR = 0.9
+EXPLORATION_RATE = 0.1
+NUM_STATES = SCREEN_WIDTH * SCREEN_HEIGHT * (ENEMY_NUM + 1)
+NUM_ACTIONS = 4  # Up, Down, Left, Right
+
+# Directions as enums
+class Directions(Enum):
+    RIGHT = 1
+    LEFT = 2
+    UP = 3
+    DOWN = 4
