@@ -22,8 +22,9 @@ class Game:
         self.score_font = pygame.font.Font(None, const.FONT_SIZE)
 
         # Initialize the Q-learning agent
+        self.train_ai = train_ai
         agent = None
-        if train_ai == True:
+        if self.train_ai:
             agent = QLearningAgent(
                 num_states=const.NUM_STATES,
                 num_actions=const.NUM_ACTIONS,
@@ -33,22 +34,23 @@ class Game:
             )
 
         # Initialize sprites
-        self.all_sprites = pygame.sprite.Group()
+        self.interactable_sprites = pygame.sprite.Group()
         self.enemies = pygame.sprite.Group()
         self.time_packs = pygame.sprite.Group()
+        self.player_sprite = pygame.sprite.GroupSingle()
         self.player = Player()
-        self.all_sprites.add(self.player)
+        self.player_sprite.add(self.player)
 
         # Create enemies and add them to groups
         for _ in range(const.ENEMY_NUM):
             enemy = Enemy()
-            self.all_sprites.add(enemy)
+            self.interactable_sprites.add(enemy)
             self.enemies.add(enemy)
 
         # Create time packs and add them to groups
         for _ in range(1):
             time_pack = TimePack()
-            self.all_sprites.add(time_pack)
+            self.interactable_sprites.add(time_pack)
             self.time_packs.add(time_pack)
 
         # Custom Events
@@ -75,11 +77,15 @@ class Game:
                     self.game_over_screen()
 
             # Update the game
-            self.all_sprites.update()
+            self.interactable_sprites.update()
+            if self.train_ai:
+                pass
+            else:
+                self.player_sprite.update()
 
             # Get the current state of the game
             current_state = 0
-            for sprite in self.all_sprites:
+            for sprite in self.interactable_sprites:
                 sprite_x, sprite_y = sprite.get_pos()
                 sprite_state = sprite_y * const.SCREEN_WIDTH + sprite_x
                 current_state += sprite_state
@@ -118,7 +124,8 @@ class Game:
 
             # Draw everything
             self.screen.fill(const.BLACK)
-            self.all_sprites.draw(self.screen)
+            self.interactable_sprites.draw(self.screen)
+            self.player_sprite.draw(self.screen)
             self.screen.blit(score_text, const.SCORE_DISPLAY_LOC)
             self.screen.blit(time_text, const.TIME_DISPLAY_LOC)
             pygame.display.flip()
@@ -129,6 +136,7 @@ class Game:
         pygame.quit()
 
     def game_over_screen(self):
+        # Buttons
         restart_button = Button(
             const.RESTART_BUTTON_LOC,
             const.MENU_BUTTON_WIDTH,
@@ -144,29 +152,34 @@ class Game:
 
         end_screen = True
         while end_screen:
+            # Handle events
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
                 if restart_button.handle_event(event=event):
                     end_screen = False
-                    self.__init__()
+                    self.__init__(train_ai=self.train_ai)
                 if quit_button.handle_event(event=event):
                     pygame.quit()
 
+            # Populate text
             score_text = self.time_font.render(
                 f'score: {self.player.score}',
                 True,
                 const.WHITE
             )
+
+            # Draw everything
             self.screen.fill(const.BLACK)
             self.screen.blit(score_text, const.SCORE_DISPLAY_LOC)
             restart_button.draw(screen=self.screen)
             quit_button.draw(screen=self.screen)
             pygame.display.flip()
 
+            # Control the game speed
             pygame.time.delay(const.GAME_SPEED)
 
 
 if __name__ == "__main__":
-    game = Game()
+    game = Game(train_ai=False)
     game.run()

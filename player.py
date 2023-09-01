@@ -17,15 +17,22 @@ class Player(pygame.sprite.Sprite):
     def update(self) -> None:
         action = 0
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+        if (keys[pygame.K_LEFT] or keys[pygame.K_a]
+            ) and self.rect.left > 0:
             action = const.Directions.LEFT
-        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+            self.move_player(action=action)
+        if (keys[pygame.K_RIGHT] or keys[pygame.K_d]
+            ) and self.rect.right < const.SCREEN_WIDTH:
             action = const.Directions.RIGHT
-        if keys[pygame.K_UP] or keys[pygame.K_w]:
+            self.move_player(action=action)
+        if (keys[pygame.K_UP] or keys[pygame.K_w]
+            ) and self.rect.top > 0:
             action = const.Directions.UP
-        if keys[pygame.K_DOWN] or keys[pygame.K_s]:
+            self.move_player(action=action)
+        if (keys[pygame.K_DOWN] or keys[pygame.K_s]
+            ) and self.rect.bottom < const.SCREEN_HEIGHT:
             action = const.Directions.DOWN
-        self.move_player(action=action)
+            self.move_player(action=action)
 
     def move_player(self, action: int) -> None:
         if action == const.Directions.LEFT and self.rect.left > 0:
