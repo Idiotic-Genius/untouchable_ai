@@ -9,7 +9,7 @@ from agent import QLearningAgent
 
 
 class Game:
-    def __init__(self, train_ai: bool):
+    def __init__(self, train_ai: bool) -> None:
         pygame.init()
         pygame.font.init()
         self.screen = pygame.display.set_mode(
@@ -48,7 +48,7 @@ class Game:
             self.enemies.add(enemy)
 
         # Create time packs and add them to groups
-        for _ in range(1):
+        for _ in range(const.TIMEPACK_NUM):
             time_pack = TimePack()
             self.interactable_sprites.add(time_pack)
             self.time_packs.add(time_pack)
@@ -60,7 +60,7 @@ class Game:
         pygame.time.set_timer(self.increase_score, 10)
         self.end_screen_event = pygame.USEREVENT + 3
 
-    def run(self):
+    def run(self) -> None:
         running = True
         while running:
             # Handle events
@@ -135,7 +135,7 @@ class Game:
 
         pygame.quit()
 
-    def game_over_screen(self):
+    def game_over_screen(self) -> None:
         # Buttons
         restart_button = Button(
             const.RESTART_BUTTON_LOC,
