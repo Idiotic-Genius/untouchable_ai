@@ -1,4 +1,9 @@
 import pygame
+import math
+import matplotlib.pyplot as plt
+import numpy as np
+from pathlib import Path
+from typing import Optional
 
 import constants as const
 from button import Button
@@ -9,7 +14,10 @@ from agent import QLearningAgent
 
 
 class Game:
-    def __init__(self, train_ai: bool) -> None:
+    def __init__(self,
+        train_ai: bool,
+        agent: Optional[QLearningAgent] = None
+    ) -> None:
         pygame.init()
         pygame.font.init()
         self.screen = pygame.display.set_mode(
@@ -17,21 +25,16 @@ class Game:
         )
         pygame.display.set_caption(const.GAME_NAME)
 
+        # Setup the game clock
+        self.clock = pygame.time.Clock()
+
         # Fonts for displaying text
         self.time_font = pygame.font.Font(None, const.FONT_SIZE)
         self.score_font = pygame.font.Font(None, const.FONT_SIZE)
 
-        # Initialize the Q-learning agent
+        # Q-Learning agent
         self.train_ai = train_ai
-        agent = None
-        if self.train_ai:
-            agent = QLearningAgent(
-                num_states=const.NUM_STATES,
-                num_actions=const.NUM_ACTIONS,
-                learning_rate=const.LEARNING_RATE,
-                discount_factor=const.DISCOUNT_FACTOR,
-                exploration_rate=const.EXPLORATION_RATE
-            )
+        self.agent = agent
 
         # Initialize sprites
         self.interactable_sprites = pygame.sprite.Group()
@@ -55,12 +58,21 @@ class Game:
 
         # Custom Events
         self.decrement_player_time = pygame.USEREVENT + 1
-        pygame.time.set_timer(self.decrement_player_time, 1000)
+        pygame.time.set_timer(self.decrement_player_time, 100)
         self.increase_score = pygame.USEREVENT + 2
-        pygame.time.set_timer(self.increase_score, 10)
+        pygame.time.set_timer(self.increase_score, 100)
         self.end_screen_event = pygame.USEREVENT + 3
 
-    def run(self) -> None:
+    def get_game_state(self) -> int:
+        player_x, player_y = self.player.get_pos()
+        game_state = player_y * const.SCREEN_WIDTH + player_x
+        for sprite in self.interactable_sprites:
+            sprite_x, sprite_y = sprite.get_pos()
+            sprite_state = sprite_y * const.SCREEN_WIDTH + sprite_x
+            game_state += sprite_state
+        return game_state
+
+    def run(self) -> int:
         running = True
         while running:
             # Handle events
@@ -69,26 +81,25 @@ class Game:
                     running = False
                 elif event.type == self.decrement_player_time:
                     self.player.decrease_time(value=1)
-                    if self.player.time < 0:
-                        running = False
+                    if self.player.time <= 0:
+                        if self.train_ai:
+                            running = False
+                        else:
+                            self.game_over_screen()
                 elif event.type == self.increase_score:
                     self.player.increase_score(value=1)
                 elif event.type == self.end_screen_event:
                     self.game_over_screen()
 
             # Update the game
-            self.interactable_sprites.update()
             if self.train_ai:
-                pass
+                # Get the current state of the game for agent to select action
+                current_state = self.get_game_state()
+                action = self.agent.select_action(state=current_state)
+                self.player.move_player(action=action)
             else:
                 self.player_sprite.update()
-
-            # Get the current state of the game
-            current_state = 0
-            for sprite in self.interactable_sprites:
-                sprite_x, sprite_y = sprite.get_pos()
-                sprite_state = sprite_y * const.SCREEN_WIDTH + sprite_x
-                current_state += sprite_state
+            self.interactable_sprites.update()
 
             # Check for collisions between the player and enemies
             enemy_collisions = pygame.sprite.spritecollide(
@@ -97,7 +108,10 @@ class Game:
                 False
             )
             if enemy_collisions:
-                pygame.event.post(pygame.event.Event(self.end_screen_event))
+                if self.train_ai:
+                    pygame.event.post(pygame.event.Event(pygame.QUIT))
+                else:
+                    pygame.event.post(pygame.event.Event(self.end_screen_event))
 
             # Check for collisions between player and time packs
             time_pack_collisions = pygame.sprite.spritecollide(
@@ -105,10 +119,10 @@ class Game:
                 self.time_packs,
                 False
             )
-            for sprite in time_pack_collisions:
-                if isinstance(sprite, TimePack):
-                    self.player.increase_time(value=sprite.value)
-                    sprite.spawn()
+            if time_pack_collisions:
+                for time_pack in time_pack_collisions:
+                    self.player.increase_time(value=time_pack.value)
+                    time_pack.spawn()
 
             # Populate text
             time_text = self.time_font.render(
@@ -122,6 +136,25 @@ class Game:
                 const.WHITE
             )
 
+            # Update the Q-value
+            if self.train_ai:
+                player_x, player_y = self.player.get_pos()
+                # FIXME: This will break when there is more than one timepack
+                for timepack in self.time_packs:
+                    timepack_x, timepack_y = timepack.get_pos()
+                reward = self.player.score + self.player.time - (
+                    math.dist(
+                        [player_x, player_y],
+                        [timepack_x, timepack_y])
+                )
+                next_state = self.get_game_state()
+                self.agent.update_q_value(
+                    state=current_state,
+                    action=action,
+                    reward=reward,
+                    next_state=next_state
+                )
+
             # Draw everything
             self.screen.fill(const.BLACK)
             self.interactable_sprites.draw(self.screen)
@@ -131,9 +164,11 @@ class Game:
             pygame.display.flip()
 
             # Control the game speed
-            pygame.time.delay(const.GAME_SPEED)
+            self.clock.tick(const.GAME_SPEED)
 
-        pygame.quit()
+        # if not self.train_ai:
+        #     pygame.quit()
+        return self.player.score
 
     def game_over_screen(self) -> None:
         # Buttons
@@ -177,9 +212,44 @@ class Game:
             pygame.display.flip()
 
             # Control the game speed
-            pygame.time.delay(const.GAME_SPEED)
+            self.clock.tick(const.GAME_SPEED)
 
 
 if __name__ == "__main__":
-    game = Game(train_ai=False)
-    game.run()
+    # Load Q-Table if one exist TODO: make actual check
+    q_table_file = Path.cwd() / "q_table.npy"
+    q_table = np.load(q_table_file)
+
+    # Initialize the Q-learning agent
+    agent = QLearningAgent(
+        num_states=const.NUM_STATES,
+        num_actions=const.NUM_ACTIONS,
+        learning_rate=const.LEARNING_RATE,
+        discount_factor=const.DISCOUNT_FACTOR,
+        exploration_rate=const.EXPLORATION_RATE,
+        q_table=q_table
+    )
+
+    # Initialize the Game
+    game = Game(train_ai=True)
+
+    # Performance tracking
+    num_episodes = 1000
+    episode_rewards = []
+    for episode in range(num_episodes):
+        game.__init__(train_ai=True, agent=agent)
+        reward = game.run()
+        episode_rewards.append(reward)
+        # Print episode information
+        print(f"Episode {episode + 1}/{num_episodes} - Score: {reward}")
+
+    # Save Q-Table
+    save_file = Path.cwd() / "q_table"
+    np.save(save_file, agent.q_table)
+
+    # Visualization of performance
+    plt.plot(episode_rewards)
+    plt.xlabel("Episode")
+    plt.ylabel("Total Reward")
+    plt.title("Agent's Performance Over Episodes")
+    plt.show()

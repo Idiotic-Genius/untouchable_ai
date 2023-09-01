@@ -1,4 +1,7 @@
 import numpy as np
+from typing import Optional
+
+import constants as const
 
 class QLearningAgent:
     def __init__(
@@ -7,15 +10,18 @@ class QLearningAgent:
         num_actions: int,
         learning_rate: float,
         discount_factor: float,
-        exploration_rate: float
+        exploration_rate: float,
+        q_table: Optional[np.ndarray] = None
     ) -> None:
         self.num_states = num_states
         self.num_actions = num_actions
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
         self.exploration_rate = exploration_rate
-
-        self.q_table = np.zeros((num_states, num_actions))
+        if q_table is not None:
+            self.q_table = q_table
+        else:
+            self.q_table = np.zeros((num_states, num_actions))
 
     def select_action(
         self,

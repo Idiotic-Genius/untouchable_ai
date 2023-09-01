@@ -19,29 +19,29 @@ class Player(pygame.sprite.Sprite):
         keys = pygame.key.get_pressed()
         if (keys[pygame.K_LEFT] or keys[pygame.K_a]
             ) and self.rect.left > 0:
-            action = const.Directions.LEFT
+            action = const.Directions.LEFT.value
             self.move_player(action=action)
         if (keys[pygame.K_RIGHT] or keys[pygame.K_d]
             ) and self.rect.right < const.SCREEN_WIDTH:
-            action = const.Directions.RIGHT
+            action = const.Directions.RIGHT.value
             self.move_player(action=action)
         if (keys[pygame.K_UP] or keys[pygame.K_w]
             ) and self.rect.top > 0:
-            action = const.Directions.UP
+            action = const.Directions.UP.value
             self.move_player(action=action)
         if (keys[pygame.K_DOWN] or keys[pygame.K_s]
             ) and self.rect.bottom < const.SCREEN_HEIGHT:
-            action = const.Directions.DOWN
+            action = const.Directions.DOWN.value
             self.move_player(action=action)
 
     def move_player(self, action: int) -> None:
-        if action == const.Directions.LEFT and self.rect.left > 0:
+        if action == const.Directions.LEFT.value and self.rect.left > 0:
             self.rect.x -= self.speed
-        if action == const.Directions.RIGHT and self.rect.right < const.SCREEN_WIDTH:
+        if action == const.Directions.RIGHT.value and self.rect.right < const.SCREEN_WIDTH:
             self.rect.x += self.speed
-        if action == const.Directions.UP and self.rect.top > 0:
+        if action == const.Directions.UP.value and self.rect.top > 0:
             self.rect.y -= self.speed
-        if action == const.Directions.DOWN and self.rect.bottom < const.SCREEN_HEIGHT:
+        if action == const.Directions.DOWN.value and self.rect.bottom < const.SCREEN_HEIGHT:
             self.rect.y += self.speed
 
     def increase_time(self, value: int) -> None:
