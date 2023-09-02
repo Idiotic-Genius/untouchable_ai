@@ -58,18 +58,23 @@ class Game:
 
         # Custom Events
         self.decrement_player_time = pygame.USEREVENT + 1
-        pygame.time.set_timer(self.decrement_player_time, 100)
+        pygame.time.set_timer(self.decrement_player_time, 10)
         self.increase_score = pygame.USEREVENT + 2
-        pygame.time.set_timer(self.increase_score, 100)
+        pygame.time.set_timer(self.increase_score, 10)
         self.end_screen_event = pygame.USEREVENT + 3
 
     def get_game_state(self) -> int:
+        # Get the positions of all entities on the screen
         player_x, player_y = self.player.get_pos()
         game_state = player_y * const.SCREEN_WIDTH + player_x
         for sprite in self.interactable_sprites:
             sprite_x, sprite_y = sprite.get_pos()
             sprite_state = sprite_y * const.SCREEN_WIDTH + sprite_x
             game_state += sprite_state
+
+        # Get the time left for the game
+        game_state += self.player.time
+
         return game_state
 
     def run(self) -> int:
@@ -142,11 +147,15 @@ class Game:
                 # FIXME: This will break when there is more than one timepack
                 for timepack in self.time_packs:
                     timepack_x, timepack_y = timepack.get_pos()
-                reward = self.player.score + self.player.time - (
-                    math.dist(
-                        [player_x, player_y],
-                        [timepack_x, timepack_y])
+                dist = math.dist(
+                    [player_x, player_y],
+                    [timepack_x, timepack_y]
                 )
+                reward = -dist
+                if time_pack_collisions:
+                    reward += 999
+                if self.player.time <= 1:
+                    reward -= 999
                 next_state = self.get_game_state()
                 self.agent.update_q_value(
                     state=current_state,
@@ -217,8 +226,8 @@ class Game:
 
 if __name__ == "__main__":
     # Load Q-Table if one exist TODO: make actual check
-    q_table_file = Path.cwd() / "q_table.npy"
-    q_table = np.load(q_table_file)
+    # q_table_file = Path.cwd() / "q_table.npy"
+    # q_table = np.load(q_table_file)
 
     # Initialize the Q-learning agent
     agent = QLearningAgent(
@@ -227,7 +236,7 @@ if __name__ == "__main__":
         learning_rate=const.LEARNING_RATE,
         discount_factor=const.DISCOUNT_FACTOR,
         exploration_rate=const.EXPLORATION_RATE,
-        q_table=q_table
+        # q_table=q_table
     )
 
     # Initialize the Game
@@ -236,10 +245,12 @@ if __name__ == "__main__":
     # Performance tracking
     num_episodes = 1000
     episode_rewards = []
+    rewards_average = []
     for episode in range(num_episodes):
         game.__init__(train_ai=True, agent=agent)
         reward = game.run()
         episode_rewards.append(reward)
+        rewards_average.append(sum(episode_rewards)/len(episode_rewards))
         # Print episode information
         print(f"Episode {episode + 1}/{num_episodes} - Score: {reward}")
 
@@ -248,8 +259,11 @@ if __name__ == "__main__":
     np.save(save_file, agent.q_table)
 
     # Visualization of performance
-    plt.plot(episode_rewards)
+    plt.plot(episode_rewards, 'k-', label='Episode Score')
+    plt.plot(rewards_average, 'r-', label='Running Average')
     plt.xlabel("Episode")
-    plt.ylabel("Total Reward")
+    plt.ylabel("Total Score")
+    plt.grid(linestyle=':')
+    plt.legend(loc='upper left')
     plt.title("Agent's Performance Over Episodes")
     plt.show()
