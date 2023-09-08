@@ -72,8 +72,8 @@ class Game:
             sprite_state = sprite_y * const.SCREEN_WIDTH + sprite_x
             game_state += sprite_state
 
-        # Get the time left for the game
-        game_state += self.player.time
+        # Get the game score
+        game_state += self.player.score
 
         return game_state
 
@@ -140,13 +140,13 @@ class Game:
                     [player_x, player_y],
                     [timepack_x, timepack_y]
                 )
-                reward = self.player.packs_eaten * 1000 - timepack_dist
+                reward = self.player.packs_eaten * 100 - timepack_dist
                 if time_pack_collisions:
-                    reward += 999
+                    reward += 99
                 if self.player.time <= 1:
-                    reward -= 999
+                    reward -= 99
                 if enemy_collisions:
-                    reward -= 999
+                    reward -= 99
                 next_state = self.get_game_state()
                 self.agent.update_q_value(
                     state=current_state,
@@ -253,7 +253,7 @@ if __name__ == "__main__":
     game = Game(train_ai=train_ai)
 
     # Performance tracking
-    num_episodes = 3000
+    num_episodes = 5000
     episode_rewards = []
     rewards_average = []
     for episode in range(num_episodes):
