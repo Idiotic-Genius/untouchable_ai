@@ -58,9 +58,9 @@ class Game:
 
         # Custom Events
         self.decrement_player_time = pygame.USEREVENT + 1
-        pygame.time.set_timer(self.decrement_player_time, 10)
+        pygame.time.set_timer(self.decrement_player_time, 100)
         self.increase_score = pygame.USEREVENT + 2
-        pygame.time.set_timer(self.increase_score, 10)
+        pygame.time.set_timer(self.increase_score, 100)
         self.end_screen_event = pygame.USEREVENT + 3
 
     def get_game_state(self) -> int:
@@ -106,28 +106,17 @@ class Game:
                 self.player_sprite.update()
             self.interactable_sprites.update()
 
-            # Check for collisions between the player and enemies
+            # Check for collisions
             enemy_collisions = pygame.sprite.spritecollide(
                 self.player,
                 self.enemies,
                 False
             )
-            if enemy_collisions:
-                if self.train_ai:
-                    pygame.event.post(pygame.event.Event(pygame.QUIT))
-                else:
-                    pygame.event.post(pygame.event.Event(self.end_screen_event))
-
-            # Check for collisions between player and time packs
             time_pack_collisions = pygame.sprite.spritecollide(
                 self.player,
                 self.time_packs,
                 False
             )
-            if time_pack_collisions:
-                for time_pack in time_pack_collisions:
-                    self.player.increase_time(value=time_pack.value)
-                    time_pack.spawn()
 
             # Populate text
             time_text = self.time_font.render(
@@ -147,14 +136,16 @@ class Game:
                 # FIXME: This will break when there is more than one timepack
                 for timepack in self.time_packs:
                     timepack_x, timepack_y = timepack.get_pos()
-                dist = math.dist(
+                timepack_dist = math.dist(
                     [player_x, player_y],
                     [timepack_x, timepack_y]
                 )
-                reward = -dist
+                reward = self.player.packs_eaten * 1000 - timepack_dist
                 if time_pack_collisions:
                     reward += 999
                 if self.player.time <= 1:
+                    reward -= 999
+                if enemy_collisions:
                     reward -= 999
                 next_state = self.get_game_state()
                 self.agent.update_q_value(
@@ -163,6 +154,17 @@ class Game:
                     reward=reward,
                     next_state=next_state
                 )
+
+            # Update the state of the game based on collisions
+            if enemy_collisions:
+                if self.train_ai:
+                    pygame.event.post(pygame.event.Event(pygame.QUIT))
+                else:
+                    pygame.event.post(pygame.event.Event(self.end_screen_event))
+            if time_pack_collisions:
+                for time_pack in time_pack_collisions:
+                    self.player.increase_time(value=time_pack.value)
+                    time_pack.spawn()
 
             # Draw everything
             self.screen.fill(const.BLACK)
@@ -175,8 +177,10 @@ class Game:
             # Control the game speed
             self.clock.tick(const.GAME_SPEED)
 
-        # if not self.train_ai:
-        #     pygame.quit()
+        # Exit the game if it's in player mode and they quit/lose
+        if not self.train_ai:
+            pygame.quit()
+
         return self.player.score
 
     def game_over_screen(self) -> None:
@@ -225,9 +229,15 @@ class Game:
 
 
 if __name__ == "__main__":
+    # Select whether to use the ai training mode
+    train_ai = True
+
     # Load Q-Table if one exist TODO: make actual check
-    # q_table_file = Path.cwd() / "q_table.npy"
-    # q_table = np.load(q_table_file)
+    q_table_file = Path.cwd() / "q_table.npy"
+    if q_table_file.exists() and train_ai:
+        q_table = np.load(q_table_file)
+    else:
+        q_table = None
 
     # Initialize the Q-learning agent
     agent = QLearningAgent(
@@ -236,22 +246,21 @@ if __name__ == "__main__":
         learning_rate=const.LEARNING_RATE,
         discount_factor=const.DISCOUNT_FACTOR,
         exploration_rate=const.EXPLORATION_RATE,
-        # q_table=q_table
+        q_table=q_table
     )
 
     # Initialize the Game
-    game = Game(train_ai=True)
+    game = Game(train_ai=train_ai)
 
     # Performance tracking
-    num_episodes = 1000
+    num_episodes = 3000
     episode_rewards = []
     rewards_average = []
     for episode in range(num_episodes):
-        game.__init__(train_ai=True, agent=agent)
+        game.__init__(train_ai=train_ai, agent=agent)
         reward = game.run()
         episode_rewards.append(reward)
         rewards_average.append(sum(episode_rewards)/len(episode_rewards))
-        # Print episode information
         print(f"Episode {episode + 1}/{num_episodes} - Score: {reward}")
 
     # Save Q-Table

@@ -1,7 +1,6 @@
 import numpy as np
 from typing import Optional
 
-import constants as const
 
 class QLearningAgent:
     def __init__(
