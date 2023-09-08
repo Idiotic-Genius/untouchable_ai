@@ -54,4 +54,4 @@ q_table.npy: Contains the pre-trained Q-table (if available).
 The "Untouchable" game was developed as a unique gaming experience. Pygame was used for creating the graphical interface, and the Q-learning algorithm plays a vital role in optimizing agent performance.
 
 ## License
-This project is licensed under the MIT License. See the LICENSE.md file for details.
+This project is licensed under the MIT License. See the LICENSE file for details.
