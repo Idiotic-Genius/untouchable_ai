@@ -1,5 +1,7 @@
 import pygame
 import math
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
@@ -140,7 +142,7 @@ class Game:
                     [player_x, player_y],
                     [timepack_x, timepack_y]
                 )
-                reward = self.player.packs_eaten * 100 - timepack_dist
+                reward = self.player.time + self.player.packs_eaten * 100 - timepack_dist * 10
                 if time_pack_collisions:
                     reward += 99
                 if self.player.time <= 1:
@@ -230,7 +232,7 @@ class Game:
 
 if __name__ == "__main__":
     # Select whether to use the ai training mode
-    train_ai = True
+    train_ai = False
 
     # Load Q-Table if one exist TODO: make actual check
     q_table_file = Path.cwd() / "q_table.npy"
@@ -253,7 +255,7 @@ if __name__ == "__main__":
     game = Game(train_ai=train_ai)
 
     # Performance tracking
-    num_episodes = 5000
+    num_episodes = 1000000
     episode_rewards = []
     rewards_average = []
     for episode in range(num_episodes):
@@ -275,4 +277,4 @@ if __name__ == "__main__":
     plt.grid(linestyle=':')
     plt.legend(loc='upper left')
     plt.title("Agent's Performance Over Episodes")
-    plt.show()
+    plt.savefig(f'results/{num_episodes}ep.png')
