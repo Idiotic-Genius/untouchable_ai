@@ -35,12 +35,19 @@ The game monitors the agent's performance over episodes and displays a performan
 
 ## Project Structure
 main.py: The primary script to launch the game and initiate training.
+
 constants.py: Contains constants and configurations for the game.
+
 button.py: Defines a class for creating in-game buttons.
+
 enemy.py: Defines a class for enemies.
+
 player.py: Defines a class for a player with the controls for actions in the game.
+
 timepack.py: Handles time pack entities.
+
 agent.py: Implements the Q-learning agent.
+
 q_table.npy: Contains the pre-trained Q-table (if available).
 
 ## Acknowledgments
